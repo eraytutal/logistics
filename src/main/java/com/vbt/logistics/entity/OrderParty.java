@@ -3,6 +3,8 @@ package com.vbt.logistics.entity;
 import com.vbt.logistics.enums.RoleType;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcType;
+import org.hibernate.dialect.PostgreSQLEnumJdbcType;
 
 @Entity
 @Table(name = "order_party", schema = "logistics")
@@ -23,7 +25,8 @@ public class OrderParty {
 
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @JdbcType(PostgreSQLEnumJdbcType.class)
+    @Column(name = "role", nullable = false, columnDefinition = "role_type")
     private RoleType role;
 
 

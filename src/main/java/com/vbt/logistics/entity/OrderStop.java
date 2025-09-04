@@ -2,6 +2,9 @@ package com.vbt.logistics.entity;
 
 import com.vbt.logistics.enums.StopRole;
 import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.JdbcType;
+import org.hibernate.dialect.PostgreSQLEnumJdbcType;
 
 import java.time.Instant;
 
@@ -12,6 +15,9 @@ import java.time.Instant;
         uniqueConstraints = @UniqueConstraint(name = "uq_order_stop__order_role_seq",
                 columnNames = {"order_id", "role", "seq"})
 )
+@Getter @Setter @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class OrderStop {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,7 +30,8 @@ public class OrderStop {
 
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @JdbcType(PostgreSQLEnumJdbcType.class)
+    @Column(name = "role", nullable = false, columnDefinition = "stop_role")
     private StopRole role;
 
 

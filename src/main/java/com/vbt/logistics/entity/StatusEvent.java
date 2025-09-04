@@ -3,6 +3,9 @@ package com.vbt.logistics.entity;
 import com.vbt.logistics.enums.EntityType;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcType;
+import org.hibernate.dialect.PostgreSQLEnumJdbcType;
+
 import java.time.Instant;
 
 
@@ -19,7 +22,8 @@ public class StatusEvent {
 
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "entity_type", nullable = false)
+    @JdbcType(PostgreSQLEnumJdbcType.class)
+    @Column(name = "entity_type", nullable = false, columnDefinition = "entity_type")
     private EntityType entityType;
 
 

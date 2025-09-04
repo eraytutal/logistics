@@ -4,6 +4,8 @@ package com.vbt.logistics.entity;
 import com.vbt.logistics.enums.Mode;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcType;
+import org.hibernate.dialect.PostgreSQLEnumJdbcType;
 
 import java.time.Instant;
 
@@ -35,8 +37,10 @@ public class ShipmentLeg {
 
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @JdbcType(PostgreSQLEnumJdbcType.class)
+    @Column(name = "mode", nullable = false, columnDefinition = "mode")
     private Mode mode;
+
 
 
     @ManyToOne(fetch = FetchType.LAZY)
