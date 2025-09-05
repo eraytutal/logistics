@@ -28,10 +28,6 @@ public class AddOrderStopBean {
         Location loc = locationRepo.findById(req.locationId())
                 .orElseThrow(() -> new NotFoundException("Location not found: " + req.locationId()));
 
-        if (req.windowStart() != null && req.windowEnd() != null && req.windowStart().isAfter(req.windowEnd())) {
-            throw new IllegalArgumentException("windowStart cannot be after windowEnd");
-        }
-
         OrderStop orderStop = OrderStop.builder()
                 .order(order)
                 .role(req.role())
