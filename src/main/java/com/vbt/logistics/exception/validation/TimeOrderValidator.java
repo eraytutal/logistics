@@ -24,12 +24,18 @@ public class TimeOrderValidator implements ConstraintValidator<TimeOrder, Object
         Instant start = extractInstant(value, startField);
         Instant end   = extractInstant(value, endField);
 
-        // İkisi de null ise ya da biri null ise: iş kuralı değildir → geçerli
         if (start == null || end == null) return true;
 
-        // start <= end olmalı
-        return !start.isAfter(end);
+        boolean ok = !start.isAfter(end);
+        if (!ok) {
+            ctx.disableDefaultConstraintViolation();
+            ctx.buildConstraintViolationWithTemplate(ctx.getDefaultConstraintMessageTemplate())
+                    .addPropertyNode(startField)
+                    .addConstraintViolation();
+        }
+        return ok;
     }
+
 
     private Instant extractInstant(Object obj, String fieldName) {
         try {
