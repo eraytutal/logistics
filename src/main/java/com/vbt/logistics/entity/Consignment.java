@@ -1,5 +1,6 @@
 package com.vbt.logistics.entity;
 
+import com.vbt.logistics.entity.base.CreatedAtAuditBaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -14,13 +15,10 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Consignment {
+public class Consignment extends CreatedAtAuditBaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(name = "created_at", nullable = false)
-    private Instant createdAt;
 
 
     @Builder.Default

@@ -17,7 +17,8 @@ import java.time.Instant;
 @AllArgsConstructor
 @Builder
 public class Document {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
 
@@ -35,11 +36,15 @@ public class Document {
     private EntityType relatedType;
 
 
-
     @Column(name = "related_id")
     private Long relatedId;
 
 
     @Column(name = "uploaded_at", nullable = false)
     private Instant uploadedAt;
+
+    @PrePersist
+    void onCreate() {
+        if (uploadedAt == null) uploadedAt = Instant.now();
+    }
 }

@@ -1,5 +1,6 @@
 package com.vbt.logistics.entity;
 
+import com.vbt.logistics.entity.base.CreatedAtAuditBaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.Instant;
@@ -13,14 +14,10 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Order {
+public class Order extends CreatedAtAuditBaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-
-    @Column(name = "created_at", nullable = false)
-    private Instant createdAt;
 
 
     @Column(name = "special_notes")

@@ -9,8 +9,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
-
 @Service
 @RequiredArgsConstructor
 public class CreateOrderBean {
@@ -19,9 +17,7 @@ public class CreateOrderBean {
 
     @Transactional
     public OrderDto create(CreateOrderRequestDto req) {
-        Instant created = req.createdAt() != null ? req.createdAt() : Instant.now();
         Order savedOrder = Order.builder()
-                .createdAt(created)
                 .specialNotes(req.specialNotes())
                 .build();
         savedOrder = orderRepository.save(savedOrder);

@@ -17,7 +17,8 @@ import java.time.Instant;
 @AllArgsConstructor
 @Builder
 public class StatusEvent {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
 
@@ -35,10 +36,15 @@ public class StatusEvent {
     private String status;
 
 
-    @Column(name = "occurred_at", nullable = false)
+    @Column(name = "occurred_at", nullable = false, updatable = false)
     private Instant occurredAt;
 
 
     @Column(columnDefinition = "text")
     private String note;
+
+    @PrePersist
+    void onCreate() {
+        if (occurredAt == null) occurredAt = Instant.now();
+    }
 }

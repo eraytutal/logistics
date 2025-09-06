@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
 
 @Service
 @RequiredArgsConstructor
@@ -21,7 +20,6 @@ public class CreateShipmentBean {
     public ShipmentDto create(CreateShipmentRequestDto req) {
         Shipment savedShipment = Shipment.builder()
                 .referenceNo(req.referenceNo())
-                .createdAt(Instant.now())
                 .build();
         savedShipment = repo.save(savedShipment);
         return mapper.mapShipment(savedShipment);
