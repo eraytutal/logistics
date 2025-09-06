@@ -11,16 +11,18 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ShipmentConsignment {
+
     @EmbeddedId
     private ShipmentConsignmentId id;
 
-
-    @ManyToOne(fetch = FetchType.LAZY) @MapsId("shipmentId")
+    @MapsId("shipmentId")
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "shipment_id", nullable = false)
     private Shipment shipment;
 
-
-    @ManyToOne(fetch = FetchType.LAZY) @MapsId("consignmentId")
+    @MapsId("consignmentId")
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "consignment_id", nullable = false)
     private Consignment consignment;
 }
+

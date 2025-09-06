@@ -4,6 +4,10 @@ import com.vbt.logistics.dto.*;
 import com.vbt.logistics.service.ShipmentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.web.SortDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,9 +38,14 @@ public class ShipmentController {
         return service.attachConsignments(shipmentId, req);
     }
 
+    // >>> YENİ: pageable + default sort
     @GetMapping("/{shipmentId}/consignments")
-    public List<ShipmentConsignmentDto> listConsignments(@PathVariable Long shipmentId) {
-        return service.listConsignments(shipmentId);
+    public PageResponseDto<ShipmentConsignmentDto> listConsignments(
+            @PathVariable Long shipmentId,
+            @PageableDefault(size = 20)
+            @SortDefault(sort = "id.consignmentId", direction = Sort.Direction.ASC)
+            Pageable pageable) {
+        return service.listConsignments(shipmentId, pageable);
     }
 
     @PostMapping("/{shipmentId}/legs")
@@ -45,14 +54,19 @@ public class ShipmentController {
         return service.addLeg(shipmentId, req);
     }
 
+    // >>> YENİ: pageable + default sort by seq asc
     @GetMapping("/{shipmentId}/legs")
-    public List<ShipmentLegDto> listLegs(@PathVariable Long shipmentId) {
-        return service.listLegs(shipmentId);
+    public PageResponseDto<ShipmentLegDto> listLegs(
+            @PathVariable Long shipmentId,
+            @PageableDefault(size = 20)
+            @SortDefault(sort = "seq", direction = Sort.Direction.ASC)
+            Pageable pageable) {
+        return service.listLegs(shipmentId, pageable);
     }
 
     @PatchMapping("/legs/{legId}/actuals")
     public ShipmentLegDto updateActual(@PathVariable Long legId,
-                                        @RequestBody UpdateShipmentLegActualRequestDto req) {
+                                       @RequestBody UpdateShipmentLegActualRequestDto req) {
         return service.updateLegActual(legId, req);
     }
 }

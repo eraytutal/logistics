@@ -4,6 +4,7 @@ import com.vbt.logistics.bean.shipment.*;
 import com.vbt.logistics.dto.*;
 import com.vbt.logistics.service.ShipmentService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,39 +22,45 @@ public class ShipmentServiceImpl implements ShipmentService {
     private final ListShipmentLegsBean listShipmentLegsBean;
     private final UpdateShipmentLegActualBean updateShipmentLegActualBean;
 
-    @Override @Transactional
+    @Override
+    @Transactional
     public ShipmentDto create(CreateShipmentRequestDto req) {
         return createShipmentBean.create(req);
     }
 
-    @Override @Transactional(readOnly = true)
+    @Override
+    @Transactional(readOnly = true)
     public ShipmentDto get(Long id) {
         return getShipmentBean.get(id);
     }
 
-    @Override @Transactional
+    @Override
+    @Transactional
     public List<ShipmentConsignmentDto> attachConsignments(Long shipmentId, AttachConsignmentsRequestDto req) {
         return attachConsignmentsBean.attach(shipmentId, req);
     }
 
-    @Override @Transactional(readOnly = true)
-    public List<ShipmentConsignmentDto> listConsignments(Long shipmentId) {
-        return listShipmentConsignmentsBean.list(shipmentId);
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponseDto<ShipmentConsignmentDto> listConsignments(Long shipmentId, Pageable pageable) {
+        return listShipmentConsignmentsBean.list(shipmentId, pageable);
     }
 
-    @Override @Transactional
+    @Override
+    @Transactional
     public ShipmentLegDto addLeg(Long shipmentId, AddShipmentLegRequestDto req) {
         return addShipmentLegBean.add(shipmentId, req);
     }
 
-    @Override @Transactional(readOnly = true)
-    public List<ShipmentLegDto> listLegs(Long shipmentId) {
-        return listShipmentLegsBean.list(shipmentId);
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponseDto<ShipmentLegDto> listLegs(Long shipmentId, Pageable pageable) {
+        return listShipmentLegsBean.list(shipmentId, pageable);
     }
 
-    @Override  @Transactional
+    @Override
+    @Transactional
     public ShipmentLegDto updateLegActual(Long legId, UpdateShipmentLegActualRequestDto req) {
         return updateShipmentLegActualBean.update(legId, req);
     }
 }
-

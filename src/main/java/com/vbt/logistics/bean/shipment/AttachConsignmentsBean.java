@@ -34,7 +34,7 @@ public class AttachConsignmentsBean {
             Consignment c = consRepo.findById(consignmentIds)
                     .orElseThrow(() -> new NotFoundException("Consignment not found: " + consignmentIds));
 
-            if (!scRepo.existsByShipmentIdAndConsignmentId(shipment.getId(), c.getId())) {
+            if (!scRepo.existsById_ShipmentIdAndId_ConsignmentId(shipment.getId(), c.getId())) {
                 ShipmentConsignment sc = ShipmentConsignment.builder()
                         .shipment(shipment)
                         .consignment(c)
@@ -43,7 +43,6 @@ public class AttachConsignmentsBean {
                 sc = scRepo.save(sc);
                 return mapper.mapShipmentConsignment(sc);
             } else {
-                // zaten bağlıysa mevcut kaydı referanslayan DTO dön
                 return new ShipmentConsignmentDto(shipment.getId(), c.getId());
             }
         }).toList();
