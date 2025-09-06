@@ -1,16 +1,17 @@
 package com.vbt.logistics.service;
 
 import com.vbt.logistics.dto.*;
-import java.util.List;
+import org.springframework.data.domain.Pageable;
+
 
 public interface OrderService {
     OrderDto createOrder(CreateOrderRequestDto req);
     OrderDto getOrder(Long id);
 
     OrderItemDto addItem(Long orderId, AddOrderItemRequestDto req);
-    List<OrderItemDto> listItems(Long orderId);
+    PageResponseDto<OrderItemDto> listItems(Long orderId, Pageable pageable);
 
     OrderStopDto addStop(Long orderId, AddOrderStopRequestDto req);
-    List<OrderStopDto> listStops(Long orderId);
+    PageResponseDto<OrderStopDto> listStops(Long orderId, Pageable pageable);
 }
 

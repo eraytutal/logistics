@@ -1,14 +1,16 @@
 package com.vbt.logistics.controller;
 
-// controller/OrderController.java
 
 import com.vbt.logistics.dto.*;
 import com.vbt.logistics.service.OrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.web.SortDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -34,9 +36,16 @@ public class OrderController {
         return service.addItem(orderId, req);
     }
 
+    // DEFAULT: id ASC
     @GetMapping("/{orderId}/items")
-    public List<OrderItemDto> items(@PathVariable Long orderId) {
-        return service.listItems(orderId);
+    public PageResponseDto<OrderItemDto> items(
+            @PathVariable Long orderId,
+            @PageableDefault(size = 20)
+            @SortDefault.SortDefaults({
+                    @SortDefault(sort = "id", direction = Sort.Direction.ASC)
+            }) Pageable pageable
+    ) {
+        return service.listItems(orderId, pageable);
     }
 
     @PostMapping("/{orderId}/stops")
@@ -45,9 +54,13 @@ public class OrderController {
         return service.addStop(orderId, req);
     }
 
+    // DEFAULT: seq ASC (mantıklı varsayılan)
     @GetMapping("/{orderId}/stops")
-    public List<OrderStopDto> stops(@PathVariable Long orderId) {
-        return service.listStops(orderId);
+    public PageResponseDto<OrderStopDto> stops(
+            @PathVariable Long orderId,
+            @PageableDefault(size = 20)
+            @SortDefault(sort = "seq", direction = Sort.Direction.ASC) Pageable pageable
+    ) {
+        return service.listStops(orderId, pageable);
     }
 }
-
