@@ -20,6 +20,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class AttachConsignmentsBean {
+
     private final ShipmentRepository shipmentRepo;
     private final ConsignmentRepository consRepo;
     private final ShipmentConsignmentRepository scRepo;
@@ -30,21 +31,32 @@ public class AttachConsignmentsBean {
         Shipment shipment = shipmentRepo.findById(shipmentId)
                 .orElseThrow(() -> new NotFoundException("Shipment not found: " + shipmentId));
 
-        return req.consignmentIds().stream().map(consignmentIds -> {
-            Consignment c = consRepo.findById(consignmentIds)
-                    .orElseThrow(() -> new NotFoundException("Consignment not found: " + consignmentIds));
+        // Boş/null liste -> 400
+        if (req.consignmentIds() == null || req.consignmentIds().isEmpty()) {
+            throw new IllegalArgumentException("consignmentIds must not be empty");
+        }
 
-            if (!scRepo.existsById_ShipmentIdAndId_ConsignmentId(shipment.getId(), c.getId())) {
-                ShipmentConsignment sc = ShipmentConsignment.builder()
-                        .shipment(shipment)
-                        .consignment(c)
-                        .build();
-                sc.setId(new ShipmentConsignmentId(shipment.getId(), c.getId()));
-                sc = scRepo.save(sc);
-                return mapper.mapShipmentConsignment(sc);
-            } else {
+        // Idempotent yaklaşım:
+        // - varsa DTO olarak geri döner
+        // - yoksa yeni ShipmentConsignment oluşturulur
+        return req.consignmentIds().stream().map(cId -> {
+            Consignment c = consRepo.findById(cId)
+                    .orElseThrow(() -> new NotFoundException("Consignment not found: " + cId));
+
+            boolean exists = scRepo.existsById_ShipmentIdAndId_ConsignmentId(shipment.getId(), c.getId());
+            if (exists) {
+                // var olan çifti "yok say" – DTO döndür (idempotent davranış)
                 return new ShipmentConsignmentDto(shipment.getId(), c.getId());
             }
+
+            ShipmentConsignment sc = ShipmentConsignment.builder()
+                    .shipment(shipment)
+                    .consignment(c)
+                    .build();
+            sc.setId(new ShipmentConsignmentId(shipment.getId(), c.getId()));
+
+            sc = scRepo.save(sc);
+            return mapper.mapShipmentConsignment(sc);
         }).toList();
     }
 }
