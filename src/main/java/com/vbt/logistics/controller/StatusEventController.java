@@ -1,32 +1,42 @@
+// src/main/java/com/vbt/logistics/controller/StatusEventController.java
 package com.vbt.logistics.controller;
 
-import com.vbt.logistics.bean.statusEvent.ListStatusEventsBean;
 import com.vbt.logistics.dto.PageResponseDto;
 import com.vbt.logistics.dto.StatusEventDto;
 import com.vbt.logistics.enums.EntityType;
+import com.vbt.logistics.service.StatusEventService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.SortDefault;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/status-events")
+@RequestMapping(value = "/api/v1", produces = MediaType.APPLICATION_JSON_VALUE)
 public class StatusEventController {
 
-    private final ListStatusEventsBean listBean;
+    private final StatusEventService service;
 
-    @GetMapping
-    public PageResponseDto<StatusEventDto> list(
+    @GetMapping("/status-events")
+    public PageResponseDto<StatusEventDto> listByQuery(
             @RequestParam EntityType entityType,
             @RequestParam Long entityId,
-            @PageableDefault(size = 20)
-            @SortDefault(sort = "occurredAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        return listBean.list(entityType, entityId, pageable);
+            @SortDefault.SortDefaults(@SortDefault(sort = "occurredAt")) Pageable pageable) {
+        return service.list(entityType, entityId, pageable);
+    }
+
+    @GetMapping("/orders/{orderId}/events")
+    public PageResponseDto<StatusEventDto> listOrderEvents(
+            @PathVariable Long orderId,
+            @SortDefault.SortDefaults(@SortDefault(sort = "occurredAt")) Pageable pageable) {
+        return service.list(EntityType.ORDER, orderId, pageable);
+    }
+
+    @GetMapping("/shipments/{shipmentId}/events")
+    public PageResponseDto<StatusEventDto> listShipmentEvents(
+            @PathVariable Long shipmentId,
+            @SortDefault.SortDefaults(@SortDefault(sort = "occurredAt")) Pageable pageable) {
+        return service.list(EntityType.SHIPMENT, shipmentId, pageable);
     }
 }
