@@ -1,8 +1,10 @@
 package com.vbt.logistics.bean.shipment;
 
+import com.vbt.logistics.bean.statusEvent.StatusEventRecorder;
 import com.vbt.logistics.dto.AddShipmentLegRequestDto;
 import com.vbt.logistics.dto.ShipmentLegDto;
 import com.vbt.logistics.entity.*;
+import com.vbt.logistics.enums.EntityType;
 import com.vbt.logistics.exception.NotFoundException;
 import com.vbt.logistics.mapper.ShipmentMapper;
 import com.vbt.logistics.repository.*;
@@ -10,7 +12,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@Service @RequiredArgsConstructor
+import static com.vbt.logistics.util.StatusCodes.LEG_ADDED;
+
+@Service
+@RequiredArgsConstructor
 public class AddShipmentLegBean {
     private final ShipmentRepository shipmentRepo;
     private final ShipmentLegRepository legRepo;
@@ -19,6 +24,7 @@ public class AddShipmentLegBean {
     private final CarrierRepository carrierRepo;
     private final com.vbt.logistics.repository.LocationRepository locationRepo;
     private final ShipmentMapper mapper;
+    private final StatusEventRecorder eventRecorder;
 
     @Transactional
     public ShipmentLegDto add(Long shipmentId, AddShipmentLegRequestDto req) {
@@ -34,7 +40,9 @@ public class AddShipmentLegBean {
         Location end = locationRepo.findById(req.endLocationId())
                 .orElseThrow(() -> new NotFoundException("End location not found: " + req.endLocationId()));
 
-        Vehicle vehicle = null; Driver driver = null; Carrier carrier = null;
+        Vehicle vehicle = null;
+        Driver driver = null;
+        Carrier carrier = null;
         if (req.vehicleId() != null) {
             vehicle = vehicleRepo.findById(req.vehicleId())
                     .orElseThrow(() -> new NotFoundException("Vehicle not found: " + req.vehicleId()));
@@ -51,7 +59,7 @@ public class AddShipmentLegBean {
         // Basit mod/alan tutarlılığı (gerekirse sıkılaştırılabilir)
         switch (req.mode()) {
             case ROAD -> {
-                // Kendi filomuz: en azından vehicle veya driver’dan biri dolu olsun (politikanıza göre ikisi de zorunlu yapılabilir)
+                // Kendi filomuz: en azından vehicle veya driver’dan biri dolu olsun dedik.
                 if (vehicle == null && driver == null && carrier == null) {
                     throw new IllegalArgumentException("ROAD leg requires vehicle/driver or external carrier");
                 }
@@ -79,6 +87,11 @@ public class AddShipmentLegBean {
                 .build();
 
         savedLeg = legRepo.save(savedLeg);
+
+        eventRecorder.record(EntityType.SHIPMENT,
+                shipment.getId(), LEG_ADDED,
+                "legId=" + savedLeg.getId() + ", seq=" + savedLeg.getSeq());
+
         return mapper.mapLeg(savedLeg);
     }
 }

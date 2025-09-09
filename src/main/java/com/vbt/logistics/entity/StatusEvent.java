@@ -3,6 +3,7 @@ package com.vbt.logistics.entity;
 import com.vbt.logistics.enums.EntityType;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.dialect.PostgreSQLEnumJdbcType;
 
@@ -23,10 +24,9 @@ public class StatusEvent {
 
 
     @Enumerated(EnumType.STRING)
-    @JdbcType(PostgreSQLEnumJdbcType.class)
-    @Column(name = "entity_type", nullable = false, columnDefinition = "entity_type")
+    @org.hibernate.annotations.JdbcType(org.hibernate.dialect.PostgreSQLEnumJdbcType.class)
+    @Column(name = "entity_type", nullable = false)
     private EntityType entityType;
-
 
     @Column(name = "entity_id", nullable = false)
     private Long entityId; // Polymorphic target
@@ -36,6 +36,7 @@ public class StatusEvent {
     private String status;
 
 
+    @CreationTimestamp
     @Column(name = "occurred_at", nullable = false, updatable = false)
     private Instant occurredAt;
 

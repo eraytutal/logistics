@@ -1,11 +1,13 @@
 package com.vbt.logistics.bean.shipment;
 
+import com.vbt.logistics.bean.statusEvent.StatusEventRecorder;
 import com.vbt.logistics.dto.AttachConsignmentsRequestDto;
 import com.vbt.logistics.dto.ShipmentConsignmentDto;
 import com.vbt.logistics.entity.Consignment;
 import com.vbt.logistics.entity.Shipment;
 import com.vbt.logistics.entity.ShipmentConsignment;
 import com.vbt.logistics.entity.ShipmentConsignmentId;
+import com.vbt.logistics.enums.EntityType;
 import com.vbt.logistics.exception.NotFoundException;
 import com.vbt.logistics.mapper.ShipmentMapper;
 import com.vbt.logistics.repository.ConsignmentRepository;
@@ -17,6 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+import static com.vbt.logistics.util.StatusCodes.CONSIGNMENTS_ATTACHED;
+
 @Service
 @RequiredArgsConstructor
 public class AttachConsignmentsBean {
@@ -25,13 +29,13 @@ public class AttachConsignmentsBean {
     private final ConsignmentRepository consRepo;
     private final ShipmentConsignmentRepository scRepo;
     private final ShipmentMapper mapper;
+    private final StatusEventRecorder eventRecorder;
 
     @Transactional
     public List<ShipmentConsignmentDto> attach(Long shipmentId, AttachConsignmentsRequestDto req) {
         Shipment shipment = shipmentRepo.findById(shipmentId)
                 .orElseThrow(() -> new NotFoundException("Shipment not found: " + shipmentId));
 
-        // Boş/null liste -> 400
         if (req.consignmentIds() == null || req.consignmentIds().isEmpty()) {
             throw new IllegalArgumentException("consignmentIds must not be empty");
         }
@@ -56,6 +60,11 @@ public class AttachConsignmentsBean {
             sc.setId(new ShipmentConsignmentId(shipment.getId(), c.getId()));
 
             sc = scRepo.save(sc);
+
+            eventRecorder.record(EntityType.SHIPMENT,
+                    shipment.getId(), CONSIGNMENTS_ATTACHED,
+                    "consignmentId=" + c.getId());
+
             return mapper.mapShipmentConsignment(sc);
         }).toList();
     }
