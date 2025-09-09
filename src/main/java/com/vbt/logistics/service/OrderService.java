@@ -13,5 +13,7 @@ public interface OrderService {
 
     OrderStopDto addStop(Long orderId, AddOrderStopRequestDto req);
     PageResponseDto<OrderStopDto> listStops(Long orderId, Pageable pageable);
+
+    PageResponseDto<OrderPartyDto> listParties(Long orderId, Pageable pageable);
 }
 

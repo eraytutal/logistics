@@ -11,10 +11,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.transaction.TransactionSystemException;
+import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.sql.SQLException;
 import java.time.Instant;
@@ -56,16 +59,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
-    /* 409 — DB constraint’leri (unique, FK vs.) */
+    /* 409 — DB constraint’leri (unique, FK, not-null vs.) */
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiError> handleDataIntegrity(DataIntegrityViolationException ex, HttpServletRequest req) {
         String code = "DATA_INTEGRITY";
 
-        // Kök neden -> SQLState ile özel ayrım (Postgres)
         Throwable root = rootCause(ex);
         if (root instanceof ConstraintViolationException hEx && hEx.getSQLException() != null) {
             String sqlState = hEx.getSQLException().getSQLState();
-            // PG: unique_violation=23505, foreign_key_violation=23503, not_null_violation=23502
             if ("23505".equals(sqlState)) code = "UNIQUE_VIOLATION";
             else if ("23503".equals(sqlState)) code = "FOREIGN_KEY_VIOLATION";
             else if ("23502".equals(sqlState)) code = "NOT_NULL_VIOLATION";
@@ -86,21 +87,40 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.BAD_REQUEST, safeMessage(ex), req, "TX_VALIDATION");
     }
 
-    /* 500 — yakalanmayan diğerleri (son çare) */
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiError> handleGeneric(Exception ex, HttpServletRequest req) {
-        log.error("Unhandled exception at {}: {}", req.getRequestURI(), ex.toString(), ex);
-        return build(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", req, "UNEXPECTED_ERROR");
-    }
-
+    /* 409 — Domain spesifik çatışmalar */
     @ExceptionHandler(ConflictException.class)
     public ResponseEntity<ApiError> handleConflict(ConflictException ex, HttpServletRequest req) {
         return build(HttpStatus.CONFLICT, ex.getMessage(), req, "CONFLICT");
     }
 
+    /* 400 — Bozuk JSON gövdesi */
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiError> handleBadJson(HttpMessageNotReadableException ex, HttpServletRequest req) {
         return build(HttpStatus.BAD_REQUEST, "Malformed JSON request", req, "BAD_JSON");
+    }
+
+    /* 400 — Tip uyumsuzluğu (ör. ?entityType=FOO) */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiError> handleTypeMismatch(MethodArgumentTypeMismatchException ex,
+                                                       HttpServletRequest req) {
+        String msg = "Invalid parameter '%s': expected %s".formatted(
+                ex.getName(),
+                ex.getRequiredType() != null ? ex.getRequiredType().getSimpleName() : "unknown"
+        );
+        return build(HttpStatus.BAD_REQUEST, msg, req, "TYPE_MISMATCH");
+    }
+
+    /* 400 — Eksik/yanlış query param binding (AMBIGUITY FIX: TypeMismatch burada YOK) */
+    @ExceptionHandler({ BindException.class, MissingServletRequestParameterException.class })
+    public ResponseEntity<ApiError> handleBadParams(Exception ex, HttpServletRequest req) {
+        return build(HttpStatus.BAD_REQUEST, "Malformed query parameter(s)", req, "BAD_PARAM");
+    }
+
+    /* 500 — yakalanmayan diğerleri (son çare) */
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiError> handleGeneric(Exception ex, HttpServletRequest req) {
+        log.error("Unhandled exception at {}: {}", req.getRequestURI(), ex.toString(), ex);
+        return build(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", req, "UNEXPECTED_ERROR");
     }
 
     /* ---- helpers ---- */
@@ -126,20 +146,6 @@ public class GlobalExceptionHandler {
     private static String safeMessage(Throwable t) {
         if (t == null) return null;
         String m = t.getMessage();
-        // İstersen burada DB hata metinlerini sadeleştirebilirsin
         return (m != null && m.length() > 500) ? m.substring(0, 500) + "..." : m;
     }
-
-    @ExceptionHandler(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<ApiError> handleTypeMismatch(
-            org.springframework.web.method.annotation.MethodArgumentTypeMismatchException ex,
-            HttpServletRequest req) {
-        String msg = "Invalid parameter '%s': expected %s".formatted(
-                ex.getName(),
-                ex.getRequiredType() != null ? ex.getRequiredType().getSimpleName() : "unknown"
-        );
-        return build(HttpStatus.BAD_REQUEST, msg, req, "TYPE_MISMATCH");
-    }
-
 }
-

@@ -18,6 +18,7 @@ public class OrderServiceImpl implements OrderService {
     private final ListOrderItemsBean listOrderItemsBean;
     private final AddOrderStopBean addOrderStopBean;
     private final ListOrderStopsBean listOrderStopsBean;
+    private final ListOrderPartiesBean listOrderPartiesBean;
 
     @Override
     @Transactional
@@ -53,5 +54,11 @@ public class OrderServiceImpl implements OrderService {
     @Transactional(readOnly = true)
     public PageResponseDto<OrderStopDto> listStops(Long orderId, Pageable pageable) {
         return listOrderStopsBean.list(orderId, pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponseDto<OrderPartyDto> listParties(Long orderId, Pageable pageable) {
+        return listOrderPartiesBean.list(orderId, pageable);
     }
 }

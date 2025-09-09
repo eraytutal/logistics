@@ -36,7 +36,6 @@ public class OrderController {
         return service.addItem(orderId, req);
     }
 
-    // DEFAULT: id ASC
     @GetMapping("/{orderId}/items")
     public PageResponseDto<OrderItemDto> items(
             @PathVariable Long orderId,
@@ -54,7 +53,6 @@ public class OrderController {
         return service.addStop(orderId, req);
     }
 
-    // DEFAULT: seq ASC (mantıklı varsayılan)
     @GetMapping("/{orderId}/stops")
     public PageResponseDto<OrderStopDto> stops(
             @PathVariable Long orderId,
@@ -62,5 +60,12 @@ public class OrderController {
             @SortDefault(sort = "seq", direction = Sort.Direction.ASC) Pageable pageable
     ) {
         return service.listStops(orderId, pageable);
+    }
+
+    @GetMapping("/{orderId}/parties")
+    public PageResponseDto<OrderPartyDto> parties(
+            @PathVariable Long orderId,
+            @SortDefault(sort = "role", direction = Sort.Direction.ASC) Pageable pageable) {
+        return service.listParties(orderId, pageable);
     }
 }

@@ -3,6 +3,7 @@ package com.vbt.logistics.mapper;
 import com.vbt.logistics.dto.*;
 import com.vbt.logistics.entity.Order;
 import com.vbt.logistics.entity.OrderItem;
+import com.vbt.logistics.entity.OrderParty;
 import com.vbt.logistics.entity.OrderStop;
 import org.springframework.stereotype.Component;
 
@@ -38,6 +39,15 @@ public class OrderMapper {
                 orderStop.getWindowStart(),
                 orderStop.getWindowEnd(),
                 orderStop.getSeq()
+        );
+    }
+
+    public OrderPartyDto mapOrderParty(OrderParty p) {
+        return new OrderPartyDto(
+                p.getId(),
+                p.getOrder() != null ? p.getOrder().getId() : null,
+                p.getRole(),
+                p.getPartyName()
         );
     }
 }
