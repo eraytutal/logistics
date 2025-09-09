@@ -21,7 +21,7 @@ public class ListStatusEventsBean {
     @Transactional(readOnly = true)
     public PageResponseDto<StatusEventDto> list(EntityType type, Long entityId, Pageable pageable) {
         Page<StatusEventDto> page = repo
-                .findByEntityTypeAndEntityIdOrderByOccurredAtDesc(type, entityId, pageable)
+                .findByEntityTypeAndEntityId(type, entityId, pageable)
                 .map(mapper::map);
         return PageResponseDto.from(page);
     }

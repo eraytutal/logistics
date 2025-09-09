@@ -129,5 +129,17 @@ public class GlobalExceptionHandler {
         // İstersen burada DB hata metinlerini sadeleştirebilirsin
         return (m != null && m.length() > 500) ? m.substring(0, 500) + "..." : m;
     }
+
+    @ExceptionHandler(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiError> handleTypeMismatch(
+            org.springframework.web.method.annotation.MethodArgumentTypeMismatchException ex,
+            HttpServletRequest req) {
+        String msg = "Invalid parameter '%s': expected %s".formatted(
+                ex.getName(),
+                ex.getRequiredType() != null ? ex.getRequiredType().getSimpleName() : "unknown"
+        );
+        return build(HttpStatus.BAD_REQUEST, msg, req, "TYPE_MISMATCH");
+    }
+
 }
 
