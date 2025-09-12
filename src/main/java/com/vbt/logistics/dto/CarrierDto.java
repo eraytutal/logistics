@@ -4,5 +4,6 @@ public record CarrierDto(
         Long id,
         String name,
         String contact,
-        Long locationId
+        Long locationId,
+        String locationName
 ) {}
