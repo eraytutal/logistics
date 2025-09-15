@@ -23,6 +23,7 @@ import java.sql.SQLException;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestControllerAdvice
@@ -59,6 +60,26 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
+    /* 400 — Query param / path param üzerindeki ConstraintViolation'lar */
+    @ExceptionHandler(jakarta.validation.ConstraintViolationException.class) // <- YENİ
+    public ResponseEntity<ApiError> handleConstraintViolations(
+            jakarta.validation.ConstraintViolationException ex, HttpServletRequest req) {
+        Map<String,String> v = new LinkedHashMap<>();
+        ex.getConstraintViolations().forEach(cv -> v.put(
+                cv.getPropertyPath().toString(), cv.getMessage()
+        ));
+        ApiError body = ApiError.builder()
+                .timestamp(Instant.now())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error(HttpStatus.BAD_REQUEST.getReasonPhrase())
+                .message("Validation failed")
+                .path(req.getRequestURI())
+                .code("VALIDATION_ERROR")
+                .validation(v)
+                .build();
+        return ResponseEntity.badRequest().body(body);
+    }
+
     /* 409 — DB constraint’leri (unique, FK, not-null vs.) */
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiError> handleDataIntegrity(DataIntegrityViolationException ex, HttpServletRequest req) {
@@ -93,10 +114,48 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.CONFLICT, ex.getMessage(), req, "CONFLICT");
     }
 
-    /* 400 — Bozuk JSON gövdesi */
+    /* 400 — Bozuk JSON gövdesi (path/tip detayını mümkünse ekle) */
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiError> handleBadJson(HttpMessageNotReadableException ex, HttpServletRequest req) {
-        return build(HttpStatus.BAD_REQUEST, "Malformed JSON request", req, "BAD_JSON");
+        Map<String, String> v = new LinkedHashMap<>();
+
+        // Jackson InvalidFormatException ise path & beklenen tipi ekle
+        Throwable root = rootCause(ex);
+        try {
+            Class<?> ifeClass = Class.forName("com.fasterxml.jackson.databind.exc.InvalidFormatException");
+            if (ifeClass.isInstance(root)) {
+                Object ife = ifeClass.cast(root);
+                var getPath = ifeClass.getMethod("getPath");
+                var getTargetType = ifeClass.getMethod("getTargetType");
+
+                var pathRefs = (java.util.List<?>) getPath.invoke(ife);
+                String path = pathRefs.stream()
+                        .map(ref -> {
+                            try {
+                                var m = ref.getClass().getMethod("getFieldName");
+                                Object fn = m.invoke(ref);
+                                return fn == null ? "?" : fn.toString();
+                            } catch (Exception e) { return "?"; }
+                        })
+                        .collect(Collectors.joining("."));
+
+                Class<?> targetType = (Class<?>) getTargetType.invoke(ife);
+                v.put(path, "Expected type: " + (targetType != null ? targetType.getSimpleName() : "unknown"));
+            }
+        } catch (Throwable ignore) {
+            // Jackson sınıfları yoksa/yordam başarısızsa sessizce geç
+        }
+
+        ApiError body = ApiError.builder()
+                .timestamp(Instant.now())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error(HttpStatus.BAD_REQUEST.getReasonPhrase())
+                .message("Malformed JSON request")
+                .path(req.getRequestURI())
+                .code("BAD_JSON")
+                .validation(v.isEmpty() ? null : v)
+                .build();
+        return ResponseEntity.badRequest().body(body);
     }
 
     /* 400 — Tip uyumsuzluğu (ör. ?entityType=FOO) */
@@ -110,13 +169,13 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.BAD_REQUEST, msg, req, "TYPE_MISMATCH");
     }
 
-    /* 400 — Eksik/yanlış query param binding (AMBIGUITY FIX: TypeMismatch burada YOK) */
+    /* 400 — Eksik/yanlış query param binding */
     @ExceptionHandler({ BindException.class, MissingServletRequestParameterException.class })
     public ResponseEntity<ApiError> handleBadParams(Exception ex, HttpServletRequest req) {
         return build(HttpStatus.BAD_REQUEST, "Malformed query parameter(s)", req, "BAD_PARAM");
     }
 
-    /* 500 — yakalanmayan diğerleri (son çare) */
+    /* 500 — yakalanmayan diğerleri */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleGeneric(Exception ex, HttpServletRequest req) {
         log.error("Unhandled exception at {}: {}", req.getRequestURI(), ex.toString(), ex);

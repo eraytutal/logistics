@@ -16,7 +16,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/shipments")
-public class  ShipmentController {
+public class ShipmentController {
 
     private final ShipmentService service;
 
@@ -68,5 +68,15 @@ public class  ShipmentController {
     public ShipmentLegDto updateActual(@PathVariable Long legId,
                                        @RequestBody UpdateShipmentLegActualRequestDto req) {
         return service.updateLegActual(legId, req);
+    }
+
+    @GetMapping("/{shipmentId}/legs/search")
+    public PageResponseDto<ShipmentLegDto> searchLegs(
+            @PathVariable Long shipmentId,
+            @Valid @ModelAttribute ShipmentLegSearchParams params, // GET query param binding
+            @PageableDefault(size = 20)
+            @SortDefault(sort = "seq", direction = Sort.Direction.ASC)
+            Pageable pageable) {
+        return service.searchLegs(shipmentId, params, pageable);
     }
 }

@@ -1,6 +1,7 @@
 package com.vbt.logistics.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -9,6 +10,7 @@ import java.util.Map;
 
 @Getter
 @Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiError {
     @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Instant timestamp;
@@ -19,4 +21,3 @@ public class ApiError {
     private String code;
     private Map<String, String> validation;
 }
-

@@ -17,4 +17,6 @@ public interface ShipmentService {
     PageResponseDto<ShipmentLegDto> listLegs(Long shipmentId, Pageable pageable);
 
     ShipmentLegDto updateLegActual(Long legId, UpdateShipmentLegActualRequestDto req);
+
+    PageResponseDto<ShipmentLegDto> searchLegs(Long shipmentId, ShipmentLegSearchParams params, Pageable pageable);
 }

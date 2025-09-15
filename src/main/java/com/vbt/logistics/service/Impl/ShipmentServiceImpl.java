@@ -21,6 +21,7 @@ public class ShipmentServiceImpl implements ShipmentService {
     private final AddShipmentLegBean addShipmentLegBean;
     private final ListShipmentLegsBean listShipmentLegsBean;
     private final UpdateShipmentLegActualBean updateShipmentLegActualBean;
+    private final SearchShipmentLegsBean searchShipmentLegsBean;
 
     @Override
     @Transactional
@@ -62,5 +63,11 @@ public class ShipmentServiceImpl implements ShipmentService {
     @Transactional
     public ShipmentLegDto updateLegActual(Long legId, UpdateShipmentLegActualRequestDto req) {
         return updateShipmentLegActualBean.update(legId, req);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponseDto<ShipmentLegDto> searchLegs(Long shipmentId, ShipmentLegSearchParams params, Pageable pageable) {
+        return searchShipmentLegsBean.search(shipmentId, params, pageable);
     }
 }

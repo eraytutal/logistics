@@ -7,22 +7,27 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 
 import java.util.List;
 
+public interface ShipmentLegRepository
+        extends JpaRepository<ShipmentLeg, Long>, JpaSpecificationExecutor<ShipmentLeg> {
 
-public interface ShipmentLegRepository extends JpaRepository<ShipmentLeg, Long> {
-
-
-    // Paging + sort (Controller’dan Pageable geliyor) → Ana yol
     @EntityGraph(attributePaths = {"startLocation", "endLocation", "vehicle", "driver", "carrier"})
-    Page<ShipmentLeg> findByShipmentId(Long shipmentId, Pageable pageable);
+    @NonNull
+    Page<ShipmentLeg> findByShipmentId(@NonNull Long shipmentId, @NonNull Pageable pageable);
 
-    // İleride Specification ile karmaşık filtre/sıralama yaparken de aynı fetch graph’ı kullanabilmek için:
     @EntityGraph(attributePaths = {"startLocation", "endLocation", "vehicle", "driver", "carrier"})
-    Page<ShipmentLeg> findAll(Specification<ShipmentLeg> spec, Pageable pageable);
+    @NonNull
+    Page<ShipmentLeg> findAll(@Nullable Specification<ShipmentLeg> spec, @NonNull Pageable pageable);
 
-    boolean existsByShipmentIdAndSeq(Long shipmentId, Integer seq);
+    boolean existsByShipmentIdAndSeq(@NonNull Long shipmentId, @NonNull Integer seq);
 
-    List<ShipmentLeg> findByShipmentId(Long shipmentId, Sort sort);
+    // Buraya tekrar bakıcam.
+    @SuppressWarnings("unused")
+    @NonNull
+    List<ShipmentLeg> findByShipmentId(@NonNull Long shipmentId, @NonNull Sort sort);
 }

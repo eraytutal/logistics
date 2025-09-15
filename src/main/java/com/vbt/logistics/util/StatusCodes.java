@@ -10,6 +10,7 @@ public final class StatusCodes {
 
     public static final String SHIPMENT_CREATED = "SHIPMENT_CREATED";
     public static final String CONSIGNMENTS_ATTACHED = "CONSIGNMENTS_ATTACHED";
+
     public static final String LEG_ADDED = "LEG_ADDED";
     public static final String LEG_ACTUAL_UPDATED = "LEG_ACTUAL_UPDATED";
 }
